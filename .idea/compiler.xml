@@ -9,5 +9,6 @@
         <module name="TDJDBC dec 2025" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel target="24" />
   </component>
 </project>
