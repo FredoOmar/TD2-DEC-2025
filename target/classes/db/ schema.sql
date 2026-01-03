@@ -13,3 +13,6 @@ create table  Ingredient(
     price numeric,
     category ingredient_category
 );
+
+select * from dish;
+select * from ingredient;

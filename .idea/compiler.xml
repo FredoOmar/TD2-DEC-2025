@@ -11,4 +11,9 @@
     </annotationProcessing>
     <bytecodeTargetLevel target="24" />
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="TDJDBC dec 2025" options="--add-exports java.base/jdk.internal.org.objectweb.asm.util=ALL-UNNAMED" />
+    </option>
+  </component>
 </project>
