@@ -18,6 +18,10 @@ public class Dish {
         this.ingredients = ingredients;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public int getId() {
         return id;
     }

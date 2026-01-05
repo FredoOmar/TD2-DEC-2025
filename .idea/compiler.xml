@@ -13,7 +13,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="TDJDBC dec 2025" options="--add-exports java.base/jdk.internal.org.objectweb.asm.util=ALL-UNNAMED" />
+      <module name="TDJDBC dec 2025" options="" />
     </option>
   </component>
 </project>

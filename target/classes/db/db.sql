@@ -18,6 +18,7 @@ CREATE DATABASE mini_dish_db
     ENCODING 'UTF8' --encodage
      -- garanti que le db est propre sans objet ajouter
 
+ALTER DATABASE mini_dish_db  OWNER TO mini_dish_db_manager ;
 -- Donner tous les privilèges a product_manager_user sur la base
 GRANT ALL PRIVILEGES ON DATABASE mini_dish_db TO mini_dish_db_manager;
 

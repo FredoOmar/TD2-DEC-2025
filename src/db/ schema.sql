@@ -11,8 +11,17 @@ create table  Ingredient(
      id serial primary key,
     name varchar(200),
     price numeric,
-    category ingredient_category
+    category ingredient_category,
+    id_dish integer references Dish(id)
 );
 
 select * from dish;
 select * from ingredient;
+
+SELECT schemaname, tablename, tableowner
+FROM pg_tables
+WHERE tablename = 'ingredient';
+
+alter table ingredient
+rename  column dish_id to id_dish;
+
