@@ -20,7 +20,7 @@ CREATE DATABASE mini_dish_db
 
 ALTER DATABASE mini_dish_db  OWNER TO mini_dish_db_manager ;
 -- Donner tous les privilèges a product_manager_user sur la base
-GRANT ALL PRIVILEGES ON DATABASE mini_dish_db TO mini_dish_db_manager;
+GRANT ALL PRIVILEGES ON DATABASE mini_dish_db TO mini_dish_db_manager with password 'new185231';
 
 -- Se connecter
 \c mini_dish_db

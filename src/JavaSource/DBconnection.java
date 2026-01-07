@@ -5,17 +5,26 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBconnection {
+        private static final String URL = "jdbc:postgresql://localhost:5432/mini_dish_db";
+        private static final String USER = "mini_dish_db_manager";
+        private static final String PASSWORD = "new185231";
 
-    public static Connection getDBConnection() throws SQLException {
+    public static Connection getDBConnection() {
+        Connection connection = null;
+        try {
 
-        String url = System.getenv("JDBC_URL");
-        String user = System.getenv("DB_USERNAME");
-        String password = System.getenv("DB_PASSWORD");
+            Class.forName("org.postgresql.Driver");
 
-        if (url == null || user == null || password == null) {
-            throw new RuntimeException("Variables d'environnement manquantes");
+            connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            System.out.println("Connexion réussie à PostgreSQL!");
+
+        } catch (ClassNotFoundException e) {
+            System.err.println("Driver PostgreSQL non trouvé");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("Erreur de connexion SQL");
+            e.printStackTrace();
         }
-
-        return DriverManager.getConnection(url, user, password);
+        return connection;
     }
 }

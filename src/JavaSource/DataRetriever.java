@@ -7,9 +7,7 @@ import java.util.List;
 public class DataRetriever {
 
     public DataRetriever() {
-        // rien à initialiser
     }
-
     public Dish findDishById(Integer id) {
 
         String dishSql = "SELECT * FROM dish WHERE id = ?";
@@ -17,7 +15,6 @@ public class DataRetriever {
 
         try (Connection con = DBconnection.getDBConnection()) {
 
-            // ---- Récupération du plat ----
             PreparedStatement dishStmt = con.prepareStatement(dishSql);
             dishStmt.setInt(1, id);
             ResultSet dishRs = dishStmt.executeQuery();
@@ -29,24 +26,22 @@ public class DataRetriever {
             Dish dish = new Dish(
                     dishRs.getInt("id"),
                     dishRs.getString("name"),
-                    DishTypeEnum.valueOf(dishRs.getString("dish_type")),
+                    DishTypeEnum.fromDb(dishRs.getString("dish_type")),
                     new ArrayList<>()
             );
 
-            // ---- Récupération des ingrédients ----
             PreparedStatement ingStmt = con.prepareStatement(ingredientSql);
             ingStmt.setInt(1, id);
             ResultSet ingRs = ingStmt.executeQuery();
 
             while (ingRs.next()) {
-                Ingredients ingredient = new Ingredients(
+                dish.getIngredients().add(new Ingredients(
                         ingRs.getInt("id"),
                         ingRs.getString("name"),
                         ingRs.getDouble("price"),
-                        CategoryEnum.valueOf(ingRs.getString("category")),
+                        CategoryEnum.fromDb(ingRs.getString("category")),
                         dish
-                );
-                dish.getIngredients().add(ingredient);
+                ));
             }
 
             return dish;
@@ -55,10 +50,11 @@ public class DataRetriever {
             throw new RuntimeException("Erreur findDishById", e);
         }
     }
+
     public List<Ingredients> findIngredients(int page, int size) {
 
         String sql = "SELECT * FROM ingredient LIMIT ? OFFSET ?";
-        int offset = page * size;
+        int offset = (page - 1) * size; // pagination correcte (page commence à 1)
 
         List<Ingredients> ingredients = new ArrayList<>();
 
@@ -75,7 +71,9 @@ public class DataRetriever {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getDouble("price"),
-                        CategoryEnum.valueOf(rs.getString("category")),
+                        CategoryEnum.valueOf(
+                                rs.getString("category").toUpperCase()
+                        ),
                         null
                 ));
             }
@@ -86,6 +84,8 @@ public class DataRetriever {
 
         return ingredients;
     }
+
+
     public List<Ingredients> createIngredients(List<Ingredients> newIngredients) {
 
         String checkSql = "SELECT COUNT(*) FROM ingredient WHERE name = ?";
@@ -93,38 +93,43 @@ public class DataRetriever {
 
         try (Connection con = DBconnection.getDBConnection()) {
 
-            con.setAutoCommit(false); // 🔥 transaction
+            con.setAutoCommit(false);
 
             for (Ingredients i : newIngredients) {
 
-                // Vérifier si l'ingrédient existe
                 try (PreparedStatement checkStmt = con.prepareStatement(checkSql)) {
                     checkStmt.setString(1, i.getName());
                     ResultSet rs = checkStmt.executeQuery();
                     rs.next();
 
                     if (rs.getInt(1) > 0) {
-                        throw new RuntimeException("Ingrédient déjà existant : " + i.getName());
+                        throw new RuntimeException(
+                                "Ingrédient déjà existant : " + i.getName()
+                        );
                     }
                 }
 
-                // Insertion
                 try (PreparedStatement insertStmt = con.prepareStatement(insertSql)) {
                     insertStmt.setString(1, i.getName());
                     insertStmt.setDouble(2, i.getPrice());
                     insertStmt.setString(3, i.getCategory().name());
-                    insertStmt.setObject(4, i.getDish() != null ? i.getDish().getId() : null);
+                    insertStmt.setObject(
+                            4,
+                            i.getDish() != null ? i.getDish().getId() : null
+                    );
                     insertStmt.executeUpdate();
                 }
             }
 
-            con.commit(); // ✅ tout OK
+            con.commit();
             return newIngredients;
 
         } catch (Exception e) {
-            throw new RuntimeException("Transaction annulée (atomicité)", e);
+            throw new RuntimeException("Transaction annulée", e);
         }
     }
+
+
     public Dish saveDish(Dish dish) {
 
         try (Connection con = DBconnection.getDBConnection()) {
@@ -132,9 +137,12 @@ public class DataRetriever {
             con.setAutoCommit(false);
 
             if (dish.getId() == 0) {
-                // INSERT
+
                 String insert = "INSERT INTO dish(name, dish_type) VALUES (?, ?)";
-                PreparedStatement ps = con.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement ps = con.prepareStatement(
+                        insert,
+                        Statement.RETURN_GENERATED_KEYS
+                );
                 ps.setString(1, dish.getName());
                 ps.setString(2, dish.getDishType().name());
                 ps.executeUpdate();
@@ -142,8 +150,9 @@ public class DataRetriever {
                 ResultSet keys = ps.getGeneratedKeys();
                 keys.next();
                 dish.setId(keys.getInt(1));
+
             } else {
-                // UPDATE
+
                 String update = "UPDATE dish SET name=?, dish_type=? WHERE id=?";
                 PreparedStatement ps = con.prepareStatement(update);
                 ps.setString(1, dish.getName());
@@ -152,13 +161,11 @@ public class DataRetriever {
                 ps.executeUpdate();
             }
 
-            // Dissocier anciens ingrédients
             String clear = "UPDATE ingredient SET id_dish=NULL WHERE id_dish=?";
             PreparedStatement clearStmt = con.prepareStatement(clear);
             clearStmt.setInt(1, dish.getId());
             clearStmt.executeUpdate();
 
-            // Associer nouveaux ingrédients
             String link = "UPDATE ingredient SET id_dish=? WHERE id=?";
             for (Ingredients i : dish.getIngredients()) {
                 PreparedStatement linkStmt = con.prepareStatement(link);
@@ -174,14 +181,16 @@ public class DataRetriever {
             throw new RuntimeException("Erreur saveDish", e);
         }
     }
+
+
     public List<Dish> findDishByIngredientName(String ingredientName) {
 
         String sql = """
-        SELECT DISTINCT d.*
-        FROM dish d
-        JOIN ingredient i ON d.id = i.id_dish
-        WHERE i.name ILIKE ?
-    """;
+            SELECT DISTINCT d.*
+            FROM dish d
+            JOIN ingredient i ON d.id = i.id_dish
+            WHERE i.name ILIKE ?
+        """;
 
         List<Dish> dishes = new ArrayList<>();
 
@@ -195,7 +204,7 @@ public class DataRetriever {
                 dishes.add(new Dish(
                         rs.getInt("id"),
                         rs.getString("name"),
-                        DishTypeEnum.valueOf(rs.getString("dish_type")),
+                        DishTypeEnum.fromDb(rs.getString("dish_type")),
                         new ArrayList<>()
                 ));
             }
@@ -206,6 +215,8 @@ public class DataRetriever {
 
         return dishes;
     }
+
+
     public List<Ingredients> findIngredientsByCriteria(
             String ingredientName,
             CategoryEnum category,
@@ -215,11 +226,11 @@ public class DataRetriever {
     ) {
 
         StringBuilder sql = new StringBuilder("""
-        SELECT i.*
-        FROM ingredient i
-        LEFT JOIN dish d ON i.id_dish = d.id
-        WHERE 1=1
-    """);
+            SELECT i.*
+            FROM ingredient i
+            LEFT JOIN dish d ON i.id_dish = d.id
+            WHERE 1=1
+        """);
 
         List<Object> params = new ArrayList<>();
 
@@ -240,7 +251,7 @@ public class DataRetriever {
 
         sql.append(" LIMIT ? OFFSET ?");
         params.add(size);
-        params.add(page * size);
+        params.add((page - 1) * size);
 
         List<Ingredients> list = new ArrayList<>();
 
@@ -258,7 +269,9 @@ public class DataRetriever {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getDouble("price"),
-                        CategoryEnum.valueOf(rs.getString("category")),
+                        CategoryEnum.valueOf(
+                                rs.getString("category").toUpperCase()
+                        ),
                         null
                 ));
             }
@@ -269,5 +282,4 @@ public class DataRetriever {
 
         return list;
     }
-
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="mini_dish_db@localhost" uuid="dc77312a-3d0b-4283-995d-1d3ba8724c07">
+    <data-source source="LOCAL" name="mini_dish_db@localhost" uuid="89cb75ae-ccfd-468a-bb38-9947049f7872">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
