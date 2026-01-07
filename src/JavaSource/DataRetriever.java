@@ -39,6 +39,7 @@ public class DataRetriever {
                         ingRs.getInt("id"),
                         ingRs.getString("name"),
                         ingRs.getDouble("price"),
+                        ingRs.getDouble("quantity"),
                         CategoryEnum.fromDb(ingRs.getString("category")),
                         dish
                 ));
@@ -71,6 +72,7 @@ public class DataRetriever {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getDouble("price"),
+                        rs.getDouble("quantity"),
                         CategoryEnum.valueOf(
                                 rs.getString("category").toUpperCase()
                         ),
@@ -269,6 +271,7 @@ public class DataRetriever {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getDouble("price"),
+                        rs.getDouble("quantity"),
                         CategoryEnum.valueOf(
                                 rs.getString("category").toUpperCase()
                         ),

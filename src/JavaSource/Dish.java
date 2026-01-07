@@ -59,7 +59,14 @@ public class Dish {
                 '}';
     }
 
-    public double getDishPrice() {
-        return ingredients.stream().mapToDouble(Ingredients::getPrice).sum();
+    public double getDishCost() {
+        double totalCost = 0.0;
+        for (Ingredients ingredient : this.ingredients) {
+            if (ingredient.getRequired_quantity() <= 0) {
+                throw new IllegalArgumentException("La quantité nécessaire pour l'ingrédient " + ingredient.getName() + " est inconnue ou nulle.");
+            }
+            totalCost += ingredient.getPrice() * ingredient.getRequired_quantity();
+        }
+        return totalCost;
     }
 }
